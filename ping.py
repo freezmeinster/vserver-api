@@ -93,7 +93,7 @@ def send_one_ping(my_socket, dest_addr, ID):
     my_socket.sendto(packet, (dest_addr, 1)) # Don't know about the 1
  
  
-def do_one(dest_addr, timeout):
+def do_one(dest_addr, timeout=1):
     """
     Returns either the delay (in seconds) or none on timeout.
     """
@@ -141,13 +141,24 @@ def verbose_ping(dest_addr, timeout = 2, count = 4):
  
  
 class Ping( threading.Thread ):
-	offset = None
-	step = None
-
-	delay = do_one('192.168.70.%s' % a,1)
-	if delay != None :
-		print '192.168.70.%s' % a
+    
+    def __init__(self,offset):
+	self.offset = offset
+	self.step = 4
+	threading.Thread.__init__(self)
+    
+    def run(self):
+	print "starting new agen offset is %s " % self.offset
+	for a in range(self.offset,self.offset+self.step):
+	    delay = do_one('192.168.70.%s' % a,1)
+	    if delay == None :
+		f = open('coba.th','a')
+		f.write("ip 192.168.70.%s Nggak idup\n" % a)
+	f.close()
 
 
 if __name__ == '__main__':
     
+    for a in range(1,63):
+	p = Ping(a*4)
+	p.start()
