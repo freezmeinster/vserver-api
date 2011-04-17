@@ -38,6 +38,9 @@ class Vps:
 	
     def get_snap(self):
 	pass
+    
+    def get_stat(self):
+	pass
 
 class VpsServer:
 	
@@ -53,7 +56,13 @@ class VpsServer:
 			
 
 class VpsFactory:
-
-    pass
+    ip = None
+    memory = None
+    nama = None
+    
+    def save(self):
+	pass
+    
+    
 
 			
