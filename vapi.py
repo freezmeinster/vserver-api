@@ -12,7 +12,7 @@ V_PREFIX = os.popen("vserver-info APPDIR SYSINFO | grep \"prefix:\" | cut -d \":
 V_ROOTDIR = os.popen("vserver-info APPDIR SYSINFO | grep \"Rootdir:\" | cut -d \":\" -f2").read().strip()
 V_CONFDIR = os.path.join(V_PREFIX,'etc/vservers')
 API_DIR = os.getcwd()
-
+ALL_IP = [ "192.168.70."+str(x)+"" for x in range(2,255)]
 HOSTNAME = socket.gethostname()
 
 class Vps:
@@ -69,15 +69,8 @@ class VpsServer:
 	    VPS.get(vps)
 	    VPS.get_conf()
 	    self.vps_obj.append(VPS)
-			
-
-class VpsFactory:
-    ip = None
-    ip_list = []
-    memory = None
-    nama = None
-    
-    def __init__(self):
+	    
+    def get_available_ip(self):
 	vps_list = os.listdir(V_ROOTDIR)
 	vps_list.remove('.pkg')
 	for vps in vps_list :
@@ -85,13 +78,24 @@ class VpsFactory:
 	    VPS.get(vps)
 	    if VPS.on_server :
 		VPS.get_conf()
-		self.ip_list.append(VPS.ip)
+		ALL_IP.remove(VPS.ip)
+	
+	return ALL_IP
+		
+			
+
+class VpsFactory:
+    vps_server = VpsServer()
+    ip = None
+    ip_list = vps_server.get_available_ip()
+    memory = None
+    nama = None
 		
     def valid_ip(self,ip):
 	if ip in self.ip_list :
-	    return False
-	else : 
 	    return True
+	else : 
+	    return False
 	    
     def create_vps(self,ip,name,memory):
 	vps_hostname = HOSTNAME.__add__("."+name+"")
@@ -103,7 +107,7 @@ class VpsFactory:
 		   vserver %s build -m skeleton \
 		   --hostname %s \
 		   --interface %s \
-		   --flags lock,virt_mem,virt_uptime,virt_cpu,virt_load,shed_hard,hide_netif\
+		   --flags lock,virt_mem,virt_uptime,virt_cpu,virt_load,hide_netif\
 		   --initstyle sysv
 		  """ % (name,vps_hostname,interface)
 	initcontent = """
@@ -122,7 +126,7 @@ class VpsFactory:
 	
 	os.mkdir(os.path.join(conf,'rlimits'))
 	mem = open(os.path.join(conf,'rlimits/rss.hard'),'w')
-	mem.write(str(memory*250))
+	mem.write(""+str(int(memory)*250)+"\n")
 	mem.close()
 	
 	os.system("/sbin/installpkg -root "+home+" "+base+"") 
@@ -143,6 +147,8 @@ class VpsFactory:
 	init = open(os.path.join(home,'etc/init.d/rc'),'w')
 	init.write(initcontent)
 	init.close()
+	init_file = os.path.join(home,'etc/init.d/rc')
+	os.system("chmod +x "+init_file+"")
 	
 	os.chdir(os.path.join(home,'etc/rc.d'))
 	os.system("patch -p 1 < "+os.path.join(API_DIR,'slackware.patch')+"") 
@@ -151,6 +157,8 @@ class VpsFactory:
     def save(self):
 	if self.valid_ip(self.ip):
 	    self.create_vps(self.ip,self.name,self.memory)
+	else :
+	    print "may be you must change name or ip of new VPS , couse your desire name for vps already taken !"
     
     
 
