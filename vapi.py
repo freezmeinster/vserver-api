@@ -6,6 +6,7 @@
 #  Untuk info lebih lanjut silahkan kunjungi http://bramandityo.com
 
 import os,socket,shutil
+from config_changer import change_sshd_config
     
 V_BASEPKG = '/home/bahan'
 V_PREFIX = os.popen("vserver-info APPDIR SYSINFO | grep \"prefix:\" | cut -d \":\" -f2").read().strip()
@@ -149,6 +150,8 @@ class VpsFactory:
 	init.close()
 	init_file = os.path.join(home,'etc/init.d/rc')
 	os.system("chmod +x "+init_file+"")
+	
+	change_sshd_config(home,ip)
 	
 	os.chdir(os.path.join(home,'etc/rc.d'))
 	os.system("patch -p 1 < "+os.path.join(API_DIR,'slackware.patch')+"") 
