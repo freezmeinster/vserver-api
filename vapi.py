@@ -19,6 +19,9 @@ HOSTNAME = socket.gethostname()
 class Vps:
     on_server = False
     
+    # fungsi untuk menginisasi virtual private server. Apabila VPS yang dimaksud tidak ada
+    # di dalam Host server, maka attribut on_server akan bernilai False.
+    
     def get(self,nama):
 	#scan Vserver-Rootdir untuk mengetahui semua Vps yang ada
 	vps_list = os.listdir(V_ROOTDIR)
@@ -29,32 +32,46 @@ class Vps:
 	    self.nama = nama
 	else :
 	    self.on_server = False
+	    self.nama = nama
+	    
 	    
 			
     def get_conf(self):
-	vdir = os.path.join(V_CONFDIR,self.nama)
-	#raw_mem = open(vdir+'/rlimits/rss.hard','r').read().strip()
-	self.ip = open(vdir+'/interfaces/0/ip','r').read().strip()
-	#self.memory = str(int(raw_mem)/250)
+        if self.on_server == True :
+            vdir = os.path.join(V_CONFDIR,self.nama)
+            raw_mem = open(vdir+'/rlimits/rss.hard','r').read().strip()
+            self.ip = open(vdir+'/interfaces/0/ip','r').read().strip()
+            self.memory = str(int(raw_mem)/250)
+        elif self.on_server == False :
+            return "VPS %s tidak ada" % self.nama 
+	    
 	    
     def commit_conf(self):
-	ip = self.ip 
-	mem = str(int(self.memory)*250)
-	vdir = os.path.join(V_CONFDIR,self.nama)
-	ip_hendler = open(vdir+'/interfaces/0/ip','w')
-	ip_hendler.write(ip)
-	ip_hendler.close()
-		
-	mem_hendler = open(vdir+'/rlimits/rss.hard','w')
-	mem_hendler.write(mem)
-	mem_hendler.close()
+        if self.on_server == True :
+            ip = self.ip 
+            mem = str(int(self.memory)*250)
+            vdir = os.path.join(V_CONFDIR,self.nama)
+            ip_hendler = open(vdir+'/interfaces/0/ip','w')
+            ip_hendler.write(ip)
+            ip_hendler.close()
+                    
+            mem_hendler = open(vdir+'/rlimits/rss.hard','w')
+            mem_hendler.write(mem)
+            mem_hendler.close()
+        elif self.on_server == False :
+            return "VPS %s tidak ada" % self.nama
+	
 	
     def destroy(self):
+        shutil.rmtree(os.path.join(V_CONFDIR,self.nama))
+        shutil.rmtree(os.path.join(V_ROOTDIR,self.nama))
 	print "VPS dengan nama %s telah kami lenyapkan" % self.nama
 		
+	
 	    
     def get_snap(self):
 	pass
+	
 	
     def get_stat(self):
 	pass
