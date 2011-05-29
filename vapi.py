@@ -35,7 +35,7 @@ class Vps:
 	    self.nama = nama
 	    
 	    
-			
+    # Fungsi untuk 
     def get_conf(self):
         if self.on_server == True :
             vdir = os.path.join(V_CONFDIR,self.nama)
