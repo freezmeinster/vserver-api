@@ -5,8 +5,7 @@
 #   
 #  Untuk info lebih lanjut silahkan kunjungi http://bramandityo.com
 
-import os,socket,shutil  
-import ConfigParser, os
+import os,socket,shutil,ConfigParser  
 from config_changer import change_sshd_config
 
 config = ConfigParser.ConfigParser()
@@ -31,7 +30,7 @@ class Vps:
 	#scan Vserver-Rootdir untuk mengetahui semua Vps yang ada
 	vps_list = os.listdir(V_ROOTDIR)
 	vps_list.remove('.pkg')
-	#membandingkan apakah nama VPS yang akan dibuat sudah ada atau belum 
+	#membandingkan apakah nama VPS yang akan1; en-us; GT-S5660 Build/FROYO) AppleWeb dibuat sudah ada atau belum 
 	if nama in vps_list :
 	    self.on_server = True
 	    self.nama = nama
@@ -40,7 +39,7 @@ class Vps:
 	    self.nama = nama
 	    
 	    
-    # Fungsi untuk 
+    # Fungsi untuk parser config dari setiap vps
     def get_conf(self):
         if self.on_server == True :
             vdir = os.path.join(V_CONFDIR,self.nama)
@@ -99,10 +98,7 @@ class VpsServer:
 		ALL_IP.remove(VPS.ip)
 	
 	return ALL_IP
-		
-
-class VpsTools(Vps):
-    a = None
+    
 			
 
 class VpsFactory:
