@@ -5,10 +5,14 @@
 #   
 #  Untuk info lebih lanjut silahkan kunjungi http://bramandityo.com
 
-import os,socket,shutil
+import os,socket,shutil  
+import ConfigParser, os
 from config_changer import change_sshd_config
-    
-V_BASEPKG = '/home/bahan'
+
+config = ConfigParser.ConfigParser()
+config.readfp(open('vapi.conf'))
+
+V_BASEPKG = config.get('vserver','v_basepkg')
 V_PREFIX = os.popen("vserver-info APPDIR SYSINFO | grep \"prefix:\" | cut -d \":\" -f2").read().strip()
 V_ROOTDIR = os.popen("vserver-info APPDIR SYSINFO | grep \"Rootdir:\" | cut -d \":\" -f2").read().strip()
 V_CONFDIR = os.path.join(V_PREFIX,'etc/vservers')
@@ -17,6 +21,7 @@ ALL_IP = [ "192.168.70."+str(x)+"" for x in range(2,255)]
 HOSTNAME = socket.gethostname()
 
 class Vps:
+    
     on_server = False
     
     # fungsi untuk menginisasi virtual private server. Apabila VPS yang dimaksud tidak ada
@@ -68,11 +73,6 @@ class Vps:
 	print "VPS dengan nama %s telah kami lenyapkan" % self.nama
 		
 	
-	    
-    def get_snap(self):
-	pass
-	
-	
     def get_stat(self):
 	pass
 
@@ -100,6 +100,9 @@ class VpsServer:
 	
 	return ALL_IP
 		
+
+class VpsTools(Vps):
+    a = None
 			
 
 class VpsFactory:
@@ -108,7 +111,12 @@ class VpsFactory:
     ip_list = vps_server.get_available_ip()
     memory = None
     nama = None
-		
+
+    def __init__(self,**kwargs):
+        self.nama = kwargs['nama']
+        self.memory = kwargs['memory']
+        self.ip = kwargs['ip']
+    
     def valid_ip(self,ip):
 	if ip in self.ip_list :
 	    return True
@@ -176,7 +184,7 @@ class VpsFactory:
 	
     def save(self):
 	if self.valid_ip(self.ip):
-	    self.create_vps(self.ip,self.name,self.memory)
+	    self.create_vps(self.ip,self.nama,self.memory)
 	else :
 	    print "may be you must change name or ip of new VPS , couse your desire name for vps already taken !"
     
