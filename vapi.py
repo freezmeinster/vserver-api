@@ -11,6 +11,7 @@ from config_changer import change_sshd_config
 config = ConfigParser.ConfigParser()
 config.readfp(open('vapi.conf'))
 
+V_SNAPSHOT = config.get('snapshot','s_store')
 V_BASEPKG = config.get('vserver','v_basepkg')
 V_PREFIX = os.popen("vserver-info APPDIR SYSINFO | grep \"prefix:\" | cut -d \":\" -f2").read().strip()
 V_ROOTDIR = os.popen("vserver-info APPDIR SYSINFO | grep \"Rootdir:\" | cut -d \":\" -f2").read().strip()
@@ -177,10 +178,18 @@ class VpsFactory:
 	os.chdir(os.path.join(home,'etc/rc.d'))
 	os.system("patch -p 1 < "+os.path.join(API_DIR,'slackware.patch')+"") 
 	
-	
+
+    def init_snapshot(self):
+        home = os.path.join(V_ROOTDIR,self.nama)
+        snap_home = os.path.join(V_SNAPSHOT,self.nama)
+        os.mkdir(snap_home)
+        os.popen("rsync -a --delete "+home+"/ "+snap_home+"/base/")
+        print "Snapshot directory was created"
+        
     def save(self):
 	if self.valid_ip(self.ip):
 	    self.create_vps(self.ip,self.nama,self.memory)
+	    self.init_snapshot()
 	else :
 	    print "may be you must change name or ip of new VPS , couse your desire name for vps already taken !"
     
