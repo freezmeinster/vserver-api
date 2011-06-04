@@ -43,10 +43,9 @@ class Vps:
     # Fungsi untuk parser config dari setiap vps
     def get_conf(self):
         if self.on_server == True :
-            vdir = os.path.join(V_CONFDIR,self.nama)
-            raw_mem = open(vdir+'/rlimits/rss.hard','r').read().strip()
+            vdir = os.path.join(V_CONFDIR,self.nama)      
             self.ip = open(vdir+'/interfaces/0/ip','r').read().strip()
-            self.memory = str(int(raw_mem)/250)
+            self.memory = open(vdir+'/cgroup/memory.limit_in_bytes','r').read().strip()
         elif self.on_server == False :
             return "VPS %s tidak ada" % self.nama 
 	    
@@ -60,7 +59,7 @@ class Vps:
             ip_hendler.write(ip)
             ip_hendler.close()
                     
-            mem_hendler = open(vdir+'/rlimits/rss.hard','w')
+            mem_hendler = open(vdir+'/cgroup/memory.limit_in_bytes','w')
             mem_hendler.write(mem)
             mem_hendler.close()
         elif self.on_server == False :
@@ -68,10 +67,12 @@ class Vps:
 	
 	
     def destroy(self):
-        shutil.rmtree(os.path.join(V_CONFDIR,self.nama))
-        shutil.rmtree(os.path.join(V_ROOTDIR,self.nama))
-	print "VPS dengan nama %s telah kami lenyapkan" % self.nama
-		
+        if self.on_server == True :
+            shutil.rmtree(os.path.join(V_CONFDIR,self.nama))
+            shutil.rmtree(os.path.join(V_ROOTDIR,self.nama))
+            print "VPS dengan nama %s telah kami lenyapkan" % self.nama
+	elif self.on_server == False :
+            return "Vps %s tidak ada" % self.nama
 	
     def get_stat(self):
 	pass
@@ -147,10 +148,14 @@ class VpsFactory:
 	
 	os.popen(command)
 	
-	os.mkdir(os.path.join(conf,'rlimits'))
-	mem = open(os.path.join(conf,'rlimits/rss.hard'),'w')
-	mem.write(""+str(int(memory)*250)+"\n")
+	os.mkdir(os.path.join(conf,'cgroup'))
+	mem = open(os.path.join(conf,'cgroup/memory.limit_in_bytes'),'w')
+	mem.write(""+str(memory)+"M\n")
 	mem.close()
+	
+	swap = open(os.path.join(conf,'cgroup/memory.memsw.limit_in_bytes'),'w')
+        swap.write(""+str(int(memory)+2*int(memory))+"M\n")
+        swap.close()
 	
 	os.system("/sbin/installpkg -root "+home+" "+base+"") 
 	
@@ -176,7 +181,9 @@ class VpsFactory:
 	change_sshd_config(home,ip)
 	
 	os.chdir(os.path.join(home,'etc/rc.d'))
-	os.system("patch -p 1 < "+os.path.join(API_DIR,'slackware.patch')+"") 
+	os.system("patch -p 1 < "+os.path.join(API_DIR,'slackware.patch')+"")
+	old_password = os.popen("openssl passwd "+self.nama+"").read().strip()
+	os.popen("chroot "+home+" /usr/sbin/usermod -p \""+old_password+"\" root") 
 	
 
     def init_snapshot(self):
